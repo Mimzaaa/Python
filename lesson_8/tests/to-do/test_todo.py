@@ -1,32 +1,40 @@
-from lesson_8.pages.todoMain import Task
+import pytest
+from lesson_8.pages.TodoMain import Task
 
+todo_page = Task()
 
-def test_get_list(todo_page: Task):
-    tasks = todo_page.get_list()
-    assert isinstance(tasks, list)
+def test_todo():
+    # получение списка задач
+    response = todo_page.get_list()
+    assert response.status_code == 200
 
-def test_create_task(todo_page: Task):
-    new_task = {"name": "New Task", "completed": False}
-    task = todo_page.create(new_task)
-    assert task["name"] == new_task["name"]
+    # создание новой
+    params = {'title': 'New Task', 'completed': 'false'}
+    task_id = todo_page.create(params)
+    assert task_id is not None
 
-def test_rename_task(todo_page: Task):
-    new_task = {"name": "Task to Rename", "completed": False}
-    task = todo_page.create(new_task)
-    task_id = task["id"]
-    renamed_task = todo_page.rename(task_id, "Renamed Task")
-    assert renamed_task["name"] == "Renamed Task"
+    # переименование задачи
+    params = {'title': 'Renamed Task'}
+    rename_task = todo_page.rename(task_id, params)
+    assert rename_task.json()['title'] == 'Renamed Task'
 
-def test_change_task_status(todo_page: Task):
-    new_task = {"name": "Task to Change Status", "completed": False}
-    task = todo_page.create(new_task)
-    task_id = task["id"]
-    updated_task = todo_page.change_status(task_id, True)
-    assert updated_task["completed"] == True
+    # информация о созданной задаче
+    info = todo_page.info(task_id)
+    assert info.json()['title'] == 'Renamed Task'
+    assert info.json()['id'] == task_id
 
-def test_delete_task(todo_page: Task):
-    new_task = {"name": "Task to Delete", "completed": False}
-    task = todo_page.create(new_task)
-    task_id = task["id"]
-    status_code = todo_page.delete(task_id)
-    assert status_code == 204
+    # отметка о выполнении
+    params = {'completed': 'true'}
+    status_true = todo_page.change_status(task_id, params)
+    assert status_true.status_code == 200
+    assert status_true.json()['completed'] == True 
+
+    # снятие отметки о выполнении
+    params = {'completed': 'false'}
+    status_false = todo_page.change_status(task_id, params)
+    assert status_false.status_code == 200
+    assert status_false.json()['completed'] == False
+
+    # удаление задачи
+    delete = todo_page.delete(task_id)
+    assert delete == 200

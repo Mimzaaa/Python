@@ -1,44 +1,33 @@
 import requests
-from constants import Todo_list_URL
+import json
+from lesson_8.constants import Todo_list_URL
 
 class Task:
-    BASE_URL = f"{Todo_list_URL}/tasks"
 
-    def __init__(self, base_url):
-        self.base_url = base_url
-        self.headers = {"Authorization": f"Bearer {self.get_token()}"}
-
-    def get_token(self):
-        # Функция для получения токена
-        # Реализуйте здесь логику авторизации
-        return "dummy_token"
+    def __init__(self, url=Todo_list_URL):
+        self.url = url
 
     def get_list(self):
-        response = requests.get(self.BASE_URL, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+        response = requests.get(self.url)
+        return response
 
-    def create(self, data):
-        response = requests.post(self.BASE_URL, json=data, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+    def create(self, params: json):
+        response = requests.post(self.url, json=params)
+        return response.json()['id']
 
-    def rename(self, task_id, new_name):
-        response = requests.patch(f"{self.BASE_URL}/{task_id}", json={"name": new_name}, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+    def rename(self, id: int, params: json):
+        response = requests.patch(self.url + str(id), json=params)
+        return response
 
-    def info(self, task_id):
-        response = requests.get(f"{self.BASE_URL}/{task_id}", headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+    def info(self, id: int):
+        response = requests.get(self.url + str(id))
+        return response
 
-    def change_status(self, task_id, status):
-        response = requests.patch(f"{self.BASE_URL}/{task_id}", json={"completed": status}, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+    def change_status(self, id: int, params: json):
+        response = requests.patch(self.url + str(id), json=params)
+        status = response.json()['completed']
+        return response
 
-    def delete(self, task_id):
-        response = requests.delete(f"{self.BASE_URL}/{task_id}", headers=self.headers)
-        response.raise_for_status()
-        return response.status_code
+    def delete(self, id: int):
+        response_status_code = (requests.delete(self.url + str(id))).status_code
+        return response_status_code
